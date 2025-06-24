@@ -10,20 +10,21 @@ import SwiftUI
 struct ProfileView: View {
     @ObservedObject var viewModel: ProfileViewModel
 
-    // Personal
+    // MARK: - Personal
     @State private var age = ""
     @State private var sex: String = "Male"
     private let sexes = ["Male", "Female"]
 
-    // Body (feet/inches + lbs)
+    // MARK: - Body (US units)
     @State private var heightFt = ""
     @State private var heightIn = ""
-    @State private var weightLb = ""
+    @State private var startWeightLb = ""  // starting weight
+    @State private var goalWeightLb = ""   // target weight
 
-    // Activity
+    // MARK: - Activity
     @State private var activityLevel: ActivityLevel = .moderatelyActive
 
-    // Goal & Rate
+    // MARK: - Goal & Rate
     @State private var goal: GoalType = .maintainWeight
     @State private var weeklyRate: Double = 0.5
     private let rates: [Double] = [0.5, 1.0, 1.5, 2.0]
@@ -34,14 +35,14 @@ struct ProfileView: View {
         2.0: "2.0 lb/week (Very Aggressive)"
     ]
 
-    // Macro split
+    // MARK: - Macro split
     @State private var selectedPreset: MacroPreset = .balanced
 
-    // UI state
+    // MARK: - UI state
     @State private var showSuccessAlert = false
     @FocusState private var isInputActive: Bool
 
-    // Keep the last saved profile around to compare for "dirty" state
+    // Keep the last saved profile around to compare for dirty check
     @State private var originalProfile: UserProfile?
 
     var body: some View {
@@ -76,7 +77,13 @@ struct ProfileView: View {
                         }
                     }
                     HStack {
-                        TextField("Weight", text: $weightLb)
+                        TextField("Starting Weight", text: $startWeightLb)
+                            .keyboardType(.decimalPad)
+                            .focused($isInputActive)
+                        Text("lbs").foregroundColor(.secondary)
+                    }
+                    HStack {
+                        TextField("Goal Weight", text: $goalWeightLb)
                             .keyboardType(.decimalPad)
                             .focused($isInputActive)
                         Text("lbs").foregroundColor(.secondary)
@@ -103,8 +110,7 @@ struct ProfileView: View {
                     if goal != .maintainWeight {
                         Picker("Rate", selection: $weeklyRate) {
                             ForEach(rates, id: \.self) { rate in
-                                Text(rateLabels[rate]!)
-                                    .tag(rate)
+                                Text(rateLabels[rate]!).tag(rate)
                             }
                         }
                         .pickerStyle(.menu)
@@ -118,7 +124,6 @@ struct ProfileView: View {
                         }
                     }
                     .pickerStyle(.menu)
-
                     Text(selectedPreset.description)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -137,7 +142,6 @@ struct ProfileView: View {
                             Text("Update")
                         }
                     }
-                    // Only enabled if valid AND dirty AND not already loading
                     .disabled(!canSave || !isDirty || viewModel.isLoading)
                 }
             }
@@ -153,94 +157,78 @@ struct ProfileView: View {
     }
 
     // MARK: - Validation
-
     private var canSave: Bool {
         guard
             Int(age) != nil,
             !sex.isEmpty,
             Double(heightFt) != nil,
             Double(heightIn) != nil,
-            Double(weightLb) != nil,
+            Double(startWeightLb) != nil,
+            Double(goalWeightLb) != nil,
             goal == .maintainWeight || rates.contains(weeklyRate)
         else { return false }
         return true
     }
 
     // MARK: - Dirty check
-
     private var isDirty: Bool {
         guard let original = originalProfile else { return false }
-        // Compare each field by converting back to model values
-        let ageInt = Int(age) ?? original.age
-        let totalIn = (Double(heightFt) ?? 0) * 12 + (Double(heightIn) ?? 0)
-        let heightCmNew = totalIn * 2.54
-        let weightKgNew = (Double(weightLb) ?? 0) * 0.453592
-        let splitNew = selectedPreset.split
-        let rateNew = goal == .maintainWeight ? 0 : weeklyRate
+        let ageInt      = Int(age) ?? original.age
+        let ft          = Double(heightFt) ?? original.heightFeet
+        let inch        = Double(heightIn) ?? original.heightInches
+        let startLb     = Double(startWeightLb) ?? original.startWeightLb
+        let goalLb      = Double(goalWeightLb)  ?? original.goalWeightLb
+        let rateNew     = goal == .maintainWeight ? 0 : weeklyRate
+        let splitNew    = selectedPreset.split
 
-        return ageInt           != original.age
-            || sex              != original.sex
-            || abs(heightCmNew - original.heightCm) > 0.1
-            || abs(weightKgNew - original.weightKg) > 0.1
-            || activityLevel    != original.activityLevel
-            || goal             != original.goal
-            || rateNew           != original.weeklyRateLbs
-            || splitNew          != original.macroSplit
+        return ageInt               != original.age
+            || sex                  != original.sex
+            || ft                   != original.heightFeet
+            || inch                 != original.heightInches
+            || startLb              != original.startWeightLb
+            || goalLb               != original.goalWeightLb
+            || activityLevel        != original.activityLevel
+            || goal                 != original.goal
+            || rateNew              != original.weeklyRateLbs
+            || splitNew             != original.macroSplit
     }
 
     // MARK: - Populate
-
     private func populateFields() {
         guard let profile = viewModel.profile else { return }
-        originalProfile = profile  // stash it
+        originalProfile = profile
 
-        age = String(profile.age)
-        sex = profile.sex
-
-        let totalInches = profile.heightCm / 2.54
-        let ft = Int(totalInches / 12)
-        let inches = Int(totalInches) % 12
-        heightFt = String(ft)
-        heightIn = String(inches)
-
-        weightLb = String(format: "%.0f", profile.weightKg * 2.20462)
-
-        activityLevel = profile.activityLevel
-        goal = profile.goal
-        weeklyRate = profile.weeklyRateLbs > 0 ? profile.weeklyRateLbs : 0.5
-
-        if let match = MacroPreset.allCases.first(where: {
-            $0.split == profile.macroSplit
-        }) {
-            selectedPreset = match
-        } else {
-            selectedPreset = .balanced
-        }
+        age              = String(profile.age)
+        sex              = profile.sex
+        heightFt         = String(format: "%.0f", profile.heightFeet)
+        heightIn         = String(format: "%.0f", profile.heightInches)
+        startWeightLb    = String(format: "%.0f", profile.startWeightLb)
+        goalWeightLb     = String(format: "%.0f", profile.goalWeightLb)
+        activityLevel    = profile.activityLevel
+        goal             = profile.goal
+        weeklyRate       = profile.weeklyRateLbs > 0 ? profile.weeklyRateLbs : 0.5
+        selectedPreset   = MacroPreset.allCases.first(where: { $0.split == profile.macroSplit })
+                            ?? .balanced
     }
 
     // MARK: - Save
-
     private func updateProfile() {
         guard
-            let ageInt = Int(age),
-            let ft = Double(heightFt),
-            let inch = Double(heightIn),
-            let wlb = Double(weightLb)
+            let ageInt    = Int(age),
+            let ft        = Double(heightFt),
+            let inch      = Double(heightIn),
+            let startLb   = Double(startWeightLb),
+            let goalLb    = Double(goalWeightLb)
         else { return }
-
-        // Dismiss keyboard
-        isInputActive = false
-
-        let totalInches = ft * 12 + inch
-        let heightCm = totalInches * 2.54
-        let weightKg = wlb * 0.453592
 
         let profile = UserProfile(
             id: viewModel.profile?.id,
             age: ageInt,
             sex: sex,
-            heightCm: heightCm,
-            weightKg: weightKg,
+            heightFeet: ft,
+            heightInches: inch,
+            startWeightLb: startLb,
+            goalWeightLb: goalLb,
             activityLevel: activityLevel,
             goal: goal,
             weeklyRateLbs: goal == .maintainWeight ? 0 : weeklyRate,
@@ -250,7 +238,6 @@ struct ProfileView: View {
         viewModel.saveProfile(profile) { success in
             if success {
                 showSuccessAlert = true
-                // update our “original” snapshot
                 originalProfile = profile
             }
         }

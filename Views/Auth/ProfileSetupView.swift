@@ -36,20 +36,21 @@ enum MacroPreset: String, CaseIterable, Identifiable {
 struct ProfileSetupView: View {
     @ObservedObject var viewModel: ProfileViewModel
 
-    // Personal
+    // MARK: - Personal
     @State private var age = ""
     @State private var sex: String = "Male"
     private let sexes = ["Male", "Female"]
 
-    // Body (feet/inches + lbs)
+    // MARK: - Body (US units)
     @State private var heightFt = ""
     @State private var heightIn = ""
-    @State private var weightLb = ""
+    @State private var weightLb = ""      // starting weight
+    @State private var goalWeightLb = ""  // target weight
 
-    // Activity
+    // MARK: - Activity
     @State private var activityLevel: ActivityLevel = .moderatelyActive
 
-    // Goal & Rate
+    // MARK: - Goal & Rate
     @State private var goal: GoalType = .maintainWeight
     @State private var weeklyRate: Double = 0.5
     private let rates: [Double] = [0.5, 1.0, 1.5, 2.0]
@@ -60,7 +61,7 @@ struct ProfileSetupView: View {
         2.0: "2.0 lb/week (Very Aggressive)"
     ]
 
-    // Macro split
+    // MARK: - Macro split
     @State private var selectedPreset: MacroPreset = .balanced
 
     var body: some View {
@@ -70,8 +71,7 @@ struct ProfileSetupView: View {
                     HStack {
                         TextField("Age", text: $age)
                             .keyboardType(.numberPad)
-                        Text("yrs")
-                            .foregroundColor(.secondary)
+                        Text("yrs").foregroundColor(.secondary)
                     }
                     Picker("Sex", selection: $sex) {
                         ForEach(sexes, id: \.self) { Text($0) }
@@ -84,21 +84,23 @@ struct ProfileSetupView: View {
                         HStack {
                             TextField("Height", text: $heightFt)
                                 .keyboardType(.numberPad)
-                            Text("ft")
-                                .foregroundColor(.secondary)
+                            Text("ft").foregroundColor(.secondary)
                         }
                         HStack {
                             TextField("in", text: $heightIn)
                                 .keyboardType(.numberPad)
-                            Text("in")
-                                .foregroundColor(.secondary)
+                            Text("in").foregroundColor(.secondary)
                         }
                     }
                     HStack {
-                        TextField("Weight", text: $weightLb)
+                        TextField("Starting Weight", text: $weightLb)
                             .keyboardType(.decimalPad)
-                        Text("lbs")
-                            .foregroundColor(.secondary)
+                        Text("lbs").foregroundColor(.secondary)
+                    }
+                    HStack {
+                        TextField("Goal Weight", text: $goalWeightLb)
+                            .keyboardType(.decimalPad)
+                        Text("lbs").foregroundColor(.secondary)
                     }
                 }
 
@@ -122,8 +124,7 @@ struct ProfileSetupView: View {
                     if goal != .maintainWeight {
                         Picker("Rate", selection: $weeklyRate) {
                             ForEach(rates, id: \.self) { rate in
-                                Text(rateLabels[rate]!)
-                                    .tag(rate)
+                                Text(rateLabels[rate]!).tag(rate)
                             }
                         }
                         .pickerStyle(.menu)
@@ -137,7 +138,6 @@ struct ProfileSetupView: View {
                         }
                     }
                     .pickerStyle(.menu)
-
                     Text(selectedPreset.description)
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -147,10 +147,8 @@ struct ProfileSetupView: View {
             .navigationTitle("Setup Profile")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveProfile()
-                    }
-                    .disabled(!canSave)
+                    Button("Save") { saveProfile() }
+                        .disabled(!canSave)
                 }
             }
         }
@@ -163,6 +161,7 @@ struct ProfileSetupView: View {
             Double(heightFt) != nil,
             Double(heightIn) != nil,
             Double(weightLb) != nil,
+            Double(goalWeightLb) != nil,
             goal == .maintainWeight || rates.contains(weeklyRate)
         else { return false }
         return true
@@ -170,27 +169,24 @@ struct ProfileSetupView: View {
 
     private func saveProfile() {
         guard
-            let ageInt = Int(age),
-            let ft = Double(heightFt),
-            let inch = Double(heightIn),
-            let wlb = Double(weightLb)
+            let ageInt    = Int(age),
+            let ft        = Double(heightFt),
+            let inch      = Double(heightIn),
+            let wlb       = Double(weightLb),
+            let goalWlb   = Double(goalWeightLb)
         else { return }
-
-        let totalInches = ft * 12 + inch
-        let heightCm = totalInches * 2.54
-        let weightKg = wlb * 0.453592
-
-        let split = selectedPreset.split
 
         let profile = UserProfile(
             age: ageInt,
             sex: sex,
-            heightCm: heightCm,
-            weightKg: weightKg,
+            heightFeet: ft,
+            heightInches: inch,
+            startWeightLb: wlb,
+            goalWeightLb: goalWlb,
             activityLevel: activityLevel,
             goal: goal,
             weeklyRateLbs: goal == .maintainWeight ? 0 : weeklyRate,
-            macroSplit: split
+            macroSplit: selectedPreset.split
         )
 
         viewModel.saveProfile(profile) { _ in }
