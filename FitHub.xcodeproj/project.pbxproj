@@ -47,6 +47,10 @@
 		A88A46FE2E09DCBC00EFC234 /* ExerciseLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A46FD2E09DCBC00EFC234 /* ExerciseLibrary.swift */; };
 		A88A47002E09E8AE00EFC234 /* WorkoutPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A46FF2E09E8AE00EFC234 /* WorkoutPickerView.swift */; };
 		A88A47022E09EB1200EFC234 /* ExerciseSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A47012E09EB1200EFC234 /* ExerciseSelectionView.swift */; };
+		A88A47082E0AF1CE00EFC234 /* WeightLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A47072E0AF1CE00EFC234 /* WeightLog.swift */; };
+		A88A470A2E0AF1FE00EFC234 /* WeightLogViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A47092E0AF1FE00EFC234 /* WeightLogViewModel.swift */; };
+		A88A470C2E0AF25E00EFC234 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A470B2E0AF25E00EFC234 /* HomeView.swift */; };
+		A88A470F2E0AF2C200EFC234 /* LogWeightView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A470E2E0AF2C200EFC234 /* LogWeightView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -86,6 +90,10 @@
 		A88A46FD2E09DCBC00EFC234 /* ExerciseLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseLibrary.swift; sourceTree = "<group>"; };
 		A88A46FF2E09E8AE00EFC234 /* WorkoutPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPickerView.swift; sourceTree = "<group>"; };
 		A88A47012E09EB1200EFC234 /* ExerciseSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseSelectionView.swift; sourceTree = "<group>"; };
+		A88A47072E0AF1CE00EFC234 /* WeightLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLog.swift; sourceTree = "<group>"; };
+		A88A47092E0AF1FE00EFC234 /* WeightLogViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightLogViewModel.swift; sourceTree = "<group>"; };
+		A88A470B2E0AF25E00EFC234 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A88A470E2E0AF2C200EFC234 /* LogWeightView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogWeightView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -201,6 +209,8 @@
 				A88A46A72E07D2EE00EFC234 /* FoodLogView.swift */,
 				A88A46A92E07D38600EFC234 /* AddFoodView.swift */,
 				A88A46E62E09C56700EFC234 /* WorkoutLogView.swift */,
+				A88A470B2E0AF25E00EFC234 /* HomeView.swift */,
+				A88A470D2E0AF2A400EFC234 /* SubViews */,
 				A88A46F82E09D50600EFC234 /* WorkoutSubViews */,
 			);
 			path = Tabs;
@@ -210,6 +220,7 @@
 			isa = PBXGroup;
 			children = (
 				A88A46B82E08A95700EFC234 /* UserProfile.swift */,
+				A88A47072E0AF1CE00EFC234 /* WeightLog.swift */,
 			);
 			path = User;
 			sourceTree = "<group>";
@@ -242,6 +253,7 @@
 			children = (
 				A88A46EE2E09CF4000EFC234 /* WorkoutTemplatesViewModel.swift */,
 				A88A46F02E09CF8800EFC234 /* WorkoutLogViewModel.swift */,
+				A88A47092E0AF1FE00EFC234 /* WeightLogViewModel.swift */,
 			);
 			path = WorkoutViewModels;
 			sourceTree = "<group>";
@@ -272,6 +284,14 @@
 				A88A47012E09EB1200EFC234 /* ExerciseSelectionView.swift */,
 			);
 			path = WorkoutSubViews;
+			sourceTree = "<group>";
+		};
+		A88A470D2E0AF2A400EFC234 /* SubViews */ = {
+			isa = PBXGroup;
+			children = (
+				A88A470E2E0AF2C200EFC234 /* LogWeightView.swift */,
+			);
+			path = SubViews;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -360,6 +380,8 @@
 				A88A46742E07AD7700EFC234 /* ContentView.swift in Sources */,
 				A88A46B92E08A95700EFC234 /* UserProfile.swift in Sources */,
 				A88A46F32E09D0BF00EFC234 /* ExerciseInputType.swift in Sources */,
+				A88A470A2E0AF1FE00EFC234 /* WeightLogViewModel.swift in Sources */,
+				A88A470C2E0AF25E00EFC234 /* HomeView.swift in Sources */,
 				A88A46B42E08A8A400EFC234 /* ProfileSetupView.swift in Sources */,
 				A88A46FE2E09DCBC00EFC234 /* ExerciseLibrary.swift in Sources */,
 				A88A46A82E07D2EE00EFC234 /* FoodLogView.swift in Sources */,
@@ -376,11 +398,13 @@
 				A88A46902E07AE0200EFC234 /* AuthViewModel.swift in Sources */,
 				A88A46AE2E07DEDA00EFC234 /* GlobalFoodSearchViewModel.swift in Sources */,
 				A88A46A32E07CE3C00EFC234 /* FoodEntry.swift in Sources */,
+				A88A47082E0AF1CE00EFC234 /* WeightLog.swift in Sources */,
 				A88A46F72E09D10B00EFC234 /* Exercise.swift in Sources */,
 				A88A46952E07AE4D00EFC234 /* MainTabView.swift in Sources */,
 				A88A46AC2E07DEB200EFC234 /* GlobalFood.swift in Sources */,
 				A88A46E92E09CE8700EFC234 /* WorkoutTemplate.swift in Sources */,
 				A88A46B62E08A8C700EFC234 /* ProfileView.swift in Sources */,
+				A88A470F2E0AF2C200EFC234 /* LogWeightView.swift in Sources */,
 				A88A46ED2E09CF1400EFC234 /* WorkoutLog.swift in Sources */,
 				A88A46BB2E08A9A700EFC234 /* ProfileViewModel.swift in Sources */,
 				A88A46FC2E09D85B00EFC234 /* MultiExerciseBuilderView.swift in Sources */,

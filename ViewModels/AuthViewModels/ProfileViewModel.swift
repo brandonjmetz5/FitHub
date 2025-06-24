@@ -30,15 +30,12 @@ class ProfileViewModel: ObservableObject {
     }
 
     init() {
-        // Listen for auth state changes
         authListener = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 if user == nil {
-                    // Clear profile when signed out
                     self.profile = nil
                 } else {
-                    // Fetch profile for the new user
                     self.fetchProfile()
                 }
             }
@@ -61,7 +58,6 @@ class ProfileViewModel: ObservableObject {
                 case .success(let up):
                     self.profile = up
                 case .failure(let error):
-                    // If no profile exists yet, leave profile = nil
                     if (error as NSError).code != FirestoreErrorCode.notFound.rawValue {
                         self.errorMessage = error.localizedDescription
                     }
@@ -70,11 +66,13 @@ class ProfileViewModel: ObservableObject {
         }
     }
 
+    /// Save or update the user’s profile AND persist all four targets to the root doc
     func saveProfile(_ profile: UserProfile, completion: @escaping (Bool) -> Void) {
         guard let ref = docRef, let uid = userId else { return }
         isLoading = true
+
         do {
-            // 1️⃣ Save profile under users/{uid}/meta/profile
+            // 1️⃣ Write the full profile under users/{uid}/meta/profile
             try ref.setData(from: profile) { error in
                 DispatchQueue.main.async {
                     if let error = error {
@@ -84,9 +82,15 @@ class ProfileViewModel: ObservableObject {
                         return
                     }
 
-                    // 2️⃣ Merge dailyCalorieAllowance into root users/{uid}
+                    // 2️⃣ Now merge the four computed targets into the root users/{uid} doc
                     let rootRef = self.db.collection("users").document(uid)
-                    rootRef.setData(["dailyCalorieAllowance": profile.calorieTarget], merge: true) { mergeError in
+                    let rootFields: [String: Any] = [
+                        "dailyCalorieAllowance": profile.calorieTarget, // ← added
+                        "proteinTarget":          profile.proteinTarget, // ← added
+                        "carbsTarget":            profile.carbsTarget,   // ← added
+                        "fatTarget":              profile.fatTarget     // ← added
+                    ]
+                    rootRef.setData(rootFields, merge: true) { mergeError in
                         DispatchQueue.main.async {
                             self.isLoading = false
                             if let mergeError = mergeError {
@@ -94,7 +98,7 @@ class ProfileViewModel: ObservableObject {
                                 completion(false)
                                 return
                             }
-                            // 3️⃣ Update in-memory profile
+                            // 3️⃣ Update in-memory and notify success
                             self.profile = profile
                             completion(true)
                         }

@@ -7,12 +7,18 @@
 
 import SwiftUI
 
+enum Tab {
+    case log, workouts, home, badges, settings
+}
+
 struct MainTabView: View {
     @ObservedObject var viewModel: AuthViewModel
     @ObservedObject var profileViewModel: ProfileViewModel
 
+    @State private var selectedTab: Tab = .home
+
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             // Food Log tab
             NavigationStack {
                 FoodLogView(
@@ -21,35 +27,31 @@ struct MainTabView: View {
                 )
                 .navigationTitle("Food Log")
             }
-            .tabItem {
-                Label("Log", systemImage: "fork.knife")
-            }
+            .tabItem { Label("Log", systemImage: "fork.knife") }
+            .tag(Tab.log)
 
             // Workout Tracker tab
             NavigationStack {
                 WorkoutLogView()
             }
-            .tabItem {
-                Label("Workouts", systemImage: "dumbbell.fill")
-            }
+            .tabItem { Label("Workouts", systemImage: "dumbbell.fill") }
+            .tag(Tab.workouts)
 
-            // Home tab placeholder
+            // Home tab
             NavigationStack {
-                Text("Home Screen Coming Soon")
+                HomeView(selectedTab: $selectedTab)
                     .navigationTitle("Home")
             }
-            .tabItem {
-                Label("Home", systemImage: "house.fill")
-            }
+            .tabItem { Label("Home", systemImage: "house.fill") }
+            .tag(Tab.home)
 
             // Badges tab
             NavigationStack {
                 Text("Badges")
                     .navigationTitle("Badges")
             }
-            .tabItem {
-                Label("Badges", systemImage: "star.fill")
-            }
+            .tabItem { Label("Badges", systemImage: "star.fill") }
+            .tag(Tab.badges)
 
             // Settings / Profile tab
             NavigationStack {
@@ -67,14 +69,14 @@ struct MainTabView: View {
                 }
                 .navigationTitle("Settings")
             }
-            .tabItem {
-                Label("Settings", systemImage: "gearshape")
-            }
+            .tabItem { Label("Settings", systemImage: "gearshape") }
+            .tag(Tab.settings)
         }
-        // Provide profile data to any subviews that need it
         .environmentObject(profileViewModel)
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     MainTabView(

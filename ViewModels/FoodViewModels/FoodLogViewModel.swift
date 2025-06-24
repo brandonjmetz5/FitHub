@@ -5,224 +5,260 @@
 //  Created by brandon metz on 6/22/25.
 //
 
+import Foundation
+import FirebaseAuth
+import FirebaseFirestore
+import FirebaseFirestoreSwift
 
+/// A simple model for daily calorie totals, used in charts and streak logic.
+struct CalorieEntry: Identifiable {
+    let id = UUID()
+    let date: Date
+    let calories: Double
+}
 
-        import Foundation
-        import FirebaseFirestore
-        import FirebaseAuth
+class FoodLogViewModel: ObservableObject {
+    // MARK: — Published state
+    @Published private(set) var entries: [FoodEntry] = []
+    @Published var todaysEntries: [FoodEntry] = []
+    @Published var weeklyCalories: [CalorieEntry] = []
+    @Published var dailyCalorieAllowance: Double = 0
+    @Published var selectedDate: Date = Date() {
+        didSet { loadLog(for: selectedDate) }
+    }
 
-        class FoodLogViewModel: ObservableObject {
-            @Published var entries: [FoodEntry] = []
-            @Published var isLoading = false
-            @Published var errorMessage: String?
-            @Published var dailyCalorieAllowance: Double = 0
+    // MARK: — Private
+    private let db = Firestore.firestore()
+    private var allowanceListener: ListenerRegistration?
+    private var userId: String? { Auth.auth().currentUser?.uid }
 
-            // MARK: — Date navigation
-            @Published var selectedDate: Date = Date() {
-                didSet { loadLog(for: selectedDate) }
-            }
+    // MARK: — Init / Deinit
+    init() {
+        fetchTodaysEntries()
+        listenToCalorieAllowance()
+    }
 
-            var totalCalories: Int {
-                entries.reduce(0) { $0 + $1.calories }
-            }
+    deinit {
+        allowanceListener?.remove()
+    }
 
-            var totalProtein: Int {
-                entries.reduce(0) { $0 + $1.protein }
-            }
+    // MARK: — Fetchers
 
-            var totalCarbs: Int {
-                entries.reduce(0) { $0 + $1.carbs }
-            }
+    /// Loads entries for today
+    func fetchTodaysEntries() {
+        loadLog(for: Date())
+    }
 
-            var totalFat: Int {
-                entries.reduce(0) { $0 + $1.fat }
-            }
+    /// Builds a 7-day series of total calories, for charts and streaks
+    func fetchWeeklyCalories() {
+        guard let uid = userId else { return }
+        var temp: [CalorieEntry] = []
+        let group = DispatchGroup()
 
-            private var db = Firestore.firestore()
-            private var userId: String? {
-                Auth.auth().currentUser?.uid
-            }
+        for offset in 0...6 {
+            let day = Calendar.current.date(byAdding: .day, value: -offset, to: Date())!
+            let key = Self.dateKey(for: day)
+            group.enter()
+            db.collection("users")
+              .document(uid)
+              .collection("foodLogs")
+              .document(key)
+              .collection("entries")
+              .getDocuments { snapshot, _ in
+                  let cals = snapshot?.documents
+                      .compactMap { try? $0.data(as: FoodEntry.self) }
+                      .reduce(0) { $0 + $1.calories } ?? 0
+                  temp.append(CalorieEntry(date: day, calories: Double(cals)))
+                  group.leave()
+              }
+        }
 
-            /// Firestore ref for today’s entries (legacy helper—no change)
-            private var todayEntriesRef: CollectionReference? {
-                guard let userId = userId else { return nil }
-                let dateKey = FoodLogViewModel.todayDateKey()
-                return db.collection("users").document(userId)
-                    .collection("foodLogs").document(dateKey)
-                    .collection("entries")
-            }
+        group.notify(queue: .main) {
+            self.weeklyCalories = temp.sorted { $0.date < $1.date }
+        }
+    }
 
-            /// Firestore ref for any date’s entries
-            private func entriesRef(for date: Date) -> CollectionReference? {
-                guard let userId = userId else { return nil }
-                let fmt = DateFormatter()
-                fmt.dateFormat = "yyyy-MM-dd"
-                let key = fmt.string(from: date)
-                return db.collection("users")
-                    .document(userId)
-                    .collection("foodLogs")
-                    .document(key)
-                    .collection("entries")
-            }
+    /// Internal loader for any single date
+    private func loadLog(for date: Date) {
+        guard let uid = userId else { return }
+        let key = Self.dateKey(for: date)
+        db.collection("users")
+          .document(uid)
+          .collection("foodLogs")
+          .document(key)
+          .collection("entries")
+          .getDocuments { snapshot, _ in
+              let docs = snapshot?.documents.compactMap {
+                  try? $0.data(as: FoodEntry.self)
+              } ?? []
+              DispatchQueue.main.async {
+                  self.entries = docs
+                  if Calendar.current.isDate(date, inSameDayAs: Date()) {
+                      self.todaysEntries = docs
+                  } else {
+                      self.todaysEntries = []
+                  }
+              }
+          }
+    }
 
-            /// Listener for allowance
-            private var allowanceListener: ListenerRegistration?
+    // MARK: — Computed Metrics
 
-            /// Initializer now loads based on `selectedDate` and starts allowance listener
-            init() {
-                loadLog(for: selectedDate)
-                listenToCalorieAllowance()
-            }
+    var totalCalories: Double { entries.reduce(0) { $0 + Double($1.calories) } }
+    var totalProtein: Double  { entries.reduce(0) { $0 + Double($1.protein) } }
+    var totalCarbs: Double    { entries.reduce(0) { $0 + Double($1.carbs) } }
+    var totalFat: Double      { entries.reduce(0) { $0 + Double($1.fat) } }
 
-            deinit {
-                allowanceListener?.remove()
-            }
+    /// Consecutive days (starting today) with ≥1 entry
+    var streak: Int {
+        var count = 0
+        let sorted = weeklyCalories.sorted { $0.date > $1.date }
+        for entry in sorted {
+            guard entry.calories > 0 else { break }
+            count += 1
+        }
+        return count
+    }
 
-            /// Listen for changes to dailyCalorieAllowance in root user doc
-            private func listenToCalorieAllowance() {
-                guard let userId = userId else { return }
-                allowanceListener = db.collection("users")
-                    .document(userId)
-                    .addSnapshotListener { [weak self] snapshot, error in
-                        guard let self = self else { return }
-                        DispatchQueue.main.async {
-                            if let data = snapshot?.data(), error == nil {
-                                self.dailyCalorieAllowance = data["dailyCalorieAllowance"] as? Double ?? 0
-                            } else if let error = error {
-                                self.errorMessage = error.localizedDescription
-                            }
-                        }
-                    }
-            }
+    // MARK: — Firestore Listeners
 
-            /// Load entries for a given date
-            func loadLog(for date: Date) {
-                guard let ref = entriesRef(for: date) else { return }
-                isLoading = true
-                ref.getDocuments { snapshot, error in
-                    DispatchQueue.main.async {
-                        self.isLoading = false
-                        if let error = error {
-                            self.errorMessage = error.localizedDescription
-                            return
-                        }
-                        self.entries = snapshot?.documents.compactMap {
-                            try? $0.data(as: FoodEntry.self)
-                        } ?? []
-                    }
+    private func listenToCalorieAllowance() {
+        guard let uid = userId else { return }
+        allowanceListener = db.collection("users")
+            .document(uid)
+            .addSnapshotListener { [weak self] snapshot, _ in
+                guard let data = snapshot?.data() else { return }
+                DispatchQueue.main.async {
+                    self?.dailyCalorieAllowance = data["dailyCalorieAllowance"] as? Double ?? 0
                 }
             }
+    }
 
-            /// Legacy helper (still available if needed)
-            func loadTodayLog() {
-                guard let entriesRef = todayEntriesRef else { return }
-                isLoading = true
-                entriesRef.getDocuments { snapshot, error in
-                    DispatchQueue.main.async {
-                        self.isLoading = false
-                        if let error = error {
-                            self.errorMessage = error.localizedDescription
-                            return
-                        }
-                        guard let documents = snapshot?.documents else {
-                            self.entries = []
-                            return
-                        }
-                        self.entries = documents.compactMap {
-                            try? $0.data(as: FoodEntry.self)
-                        }
-                    }
+    // MARK: — Helpers
+
+    private static func dateKey(for date: Date) -> String {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        return fmt.string(from: date)
+    }
+
+    // MARK: — CRUD Operations
+
+    func addFoodEntry(_ entry: FoodEntry) {
+        guard let uid = userId else { return }
+        let key = Self.dateKey(for: Date())
+        let ref = db.collection("users")
+            .document(uid)
+            .collection("foodLogs")
+            .document(key)
+            .collection("entries")
+            .document(entry.id)
+
+        do {
+            try ref.setData(from: entry)
+            DispatchQueue.main.async {
+                self.entries.append(entry)
+                self.todaysEntries.append(entry)
+            }
+            saveToGlobalFoodsIfNew(entry)
+        } catch {
+            print("Error saving entry: \(error.localizedDescription)")
+        }
+    }
+
+    func updateFoodEntry(_ entry: FoodEntry) {
+        guard let uid = userId else { return }
+        let key = Self.dateKey(for: Date())
+        let ref = db.collection("users")
+            .document(uid)
+            .collection("foodLogs")
+            .document(key)
+            .collection("entries")
+            .document(entry.id)
+
+        do {
+            try ref.setData(from: entry)
+            DispatchQueue.main.async {
+                if let idx = self.entries.firstIndex(where: { $0.id == entry.id }) {
+                    self.entries[idx] = entry
+                }
+                if let idx = self.todaysEntries.firstIndex(where: { $0.id == entry.id }) {
+                    self.todaysEntries[idx] = entry
                 }
             }
+        } catch {
+            print("Error updating entry: \(error.localizedDescription)")
+        }
+    }
 
-            // MARK: — Existing CRUD methods
+    func deleteEntries(for mealType: MealType, at offsets: IndexSet) {
+        guard let uid = userId else { return }
+        let key = Self.dateKey(for: Date())
+        let entriesRef = db.collection("users")
+            .document(uid)
+            .collection("foodLogs")
+            .document(key)
+            .collection("entries")
 
-            func addFoodEntry(_ entry: FoodEntry) {
-                guard let entriesRef = todayEntriesRef else { return }
-                do {
-                    try entriesRef.document(entry.id).setData(from: entry)
-                    entries.append(entry)
-                    saveToGlobalFoodsIfNew(entry)
-                } catch {
-                    print("Error saving entry: \(error.localizedDescription)")
+        let toDelete = offsets.map { idx in
+            todaysEntries.filter { $0.meal == mealType }[idx]
+        }
+        toDelete.forEach { entry in
+            entriesRef.document(entry.id).delete { error in
+                if let error = error {
+                    print("Error deleting entry: \(error.localizedDescription)")
                 }
-            }
-
-            func updateFoodEntry(_ entry: FoodEntry) {
-                guard let entriesRef = todayEntriesRef else { return }
-                do {
-                    try entriesRef.document(entry.id).setData(from: entry)
-                    if let idx = entries.firstIndex(where: { $0.id == entry.id }) {
-                        entries[idx] = entry
-                    }
-                } catch {
-                    print("Error updating entry: \(error.localizedDescription)")
-                }
-            }
-
-            private func saveToGlobalFoodsIfNew(_ entry: FoodEntry) {
-                let globalRef = db.collection("globalFoods")
-                let nameKey = entry.name
-                    .lowercased()
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
-                let brandKey = (entry.brand ?? "")
-                    .lowercased()
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
-
-                globalRef
-                    .whereField("nameKey", isEqualTo: nameKey)
-                    .whereField("brandKey", isEqualTo: brandKey)
-                    .getDocuments { snapshot, error in
-                        if let error = error {
-                            print("Error checking global foods:", error.localizedDescription)
-                            return
-                        }
-                        guard let docs = snapshot?.documents, docs.isEmpty else { return }
-                        let newDoc = globalRef.document()
-                        newDoc.setData([
-                            "id": newDoc.documentID,
-                            "name": entry.name,
-                            "brand": entry.brand ?? "",
-                            "nameKey": nameKey,
-                            "brandKey": brandKey,
-                            "calories": entry.calories,
-                            "protein": entry.protein,
-                            "carbs": entry.carbs,
-                            "fat": entry.fat,
-                            "unit": entry.unit,
-                            "quantity": entry.quantity,
-                            "isUserCreated": true,
-                            "creatorId": self.userId ?? "",
-                            "reportCount": 0,
-                            "isReported": false,
-                            "createdAt": Timestamp()
-                        ]) { error in
-                            if let error = error {
-                                print("Failed to save to globalFoods:", error.localizedDescription)
-                            }
-                        }
-                    }
-            }
-
-            func deleteEntries(for mealType: MealType, at offsets: IndexSet) {
-                let toDelete = offsets.map { idx in
-                    entries.filter { $0.meal == mealType }[idx]
-                }
-                toDelete.forEach { entry in
-                    todayEntriesRef?.document(entry.id).delete { error in
-                        if let error = error {
-                            print("Error deleting entry: \(error.localizedDescription)")
-                        }
-                    }
-                }
-                entries.removeAll { toDelete.contains($0) }
-            }
-
-            static func todayDateKey() -> String {
-                let fmt = DateFormatter()
-                fmt.dateFormat = "yyyy-MM-dd"
-                return fmt.string(from: Date())
             }
         }
+        DispatchQueue.main.async {
+            self.entries.removeAll { toDelete.contains($0) }
+            self.todaysEntries.removeAll { toDelete.contains($0) }
+        }
+    }
+
+    private func saveToGlobalFoodsIfNew(_ entry: FoodEntry) {
+        let globalRef = db.collection("globalFoods")
+        let nameKey = entry.name
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
+        let brandKey = (entry.brand ?? "")
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "[^a-z0-9]", with: "", options: .regularExpression)
+
+        globalRef
+            .whereField("nameKey", isEqualTo: nameKey)
+            .whereField("brandKey", isEqualTo: brandKey)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    print("Error checking global foods:", error.localizedDescription)
+                    return
+                }
+                guard let docs = snapshot?.documents, docs.isEmpty else { return }
+                let newDoc = globalRef.document()
+                newDoc.setData([
+                    "id": newDoc.documentID,
+                    "name": entry.name,
+                    "brand": entry.brand ?? "",
+                    "nameKey": nameKey,
+                    "brandKey": brandKey,
+                    "calories": entry.calories,
+                    "protein": entry.protein,
+                    "carbs": entry.carbs,
+                    "fat": entry.fat,
+                    "unit": entry.unit,
+                    "quantity": entry.quantity,
+                    "isUserCreated": true,
+                    "creatorId": self.userId ?? "",
+                    "reportCount": 0,
+                    "isReported": false,
+                    "createdAt": Timestamp()
+                ]) { error in
+                    if let error = error {
+                        print("Failed to save to globalFoods:", error.localizedDescription)
+                    }
+                }
+            }
+    }
+}
