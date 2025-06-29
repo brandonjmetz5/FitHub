@@ -47,12 +47,12 @@ struct MainTabView: View {
 
             // Badges tab
             NavigationStack {
-                Text("Badges")
-                    .navigationTitle("Badges")
+               StatsView()
             }
             .tabItem { Label("Badges", systemImage: "star.fill") }
             .tag(Tab.badges)
-
+            
+            
             // Settings / Profile tab
             NavigationStack {
                 Form {

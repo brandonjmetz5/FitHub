@@ -16,12 +16,12 @@ struct FitHubApp: App {
     @StateObject private var profileViewModel = ProfileViewModel()
     // Workout templates VM for seeding and runtime access
     @StateObject private var templatesVM = WorkoutTemplatesViewModel()
-
+    
     init() {
         FirebaseApp.configure()
         seedDefaultTemplatesIfNeeded()
     }
-
+    
     var body: some Scene {
         WindowGroup {
             Group {
@@ -48,22 +48,21 @@ struct FitHubApp: App {
             .environmentObject(templatesVM)
         }
     }
-
+    
     /// On first launch, checks for any preset templates in Firestore.
     /// If none exist, seeds the `workoutTemplates` collection with two defaults.
     private func seedDefaultTemplatesIfNeeded() {
         let db = Firestore.firestore()
         let presetsQuery = db.collection("workoutTemplates")
             .whereField("isPreset", isEqualTo: true)
-
+        
         presetsQuery.getDocuments { snapshot, error in
             guard let count = snapshot?.documents.count, error == nil else {
                 print("Error checking for existing presets: \(error?.localizedDescription ?? "unknown error")")
                 return
             }
-            // Only seed if there are no presets yet
             guard count == 0 else { return }
-
+            
             let defaultWorkouts: [WorkoutTemplate] = [
                 WorkoutTemplate(
                     id: nil,
@@ -71,10 +70,10 @@ struct FitHubApp: App {
                     isPreset: true,
                     userId: nil,
                     exercises: [
-                        Exercise(name: "Bodyweight Squat", inputType: .strength, category: .lowerBody),
-                        Exercise(name: "Push-Up",           inputType: .strength, category: .upperBody),
-                        Exercise(name: "Plank",             inputType: .strength, category: .core),
-                        Exercise(name: "Jumping Jack",      inputType: .cardio,   category: .cardio)
+                        Exercise(name: "Goblet Squat", inputType: .strength, muscleGroup: .quads),
+                        Exercise(name: "Push-ups",     inputType: .strength, muscleGroup: .chest),
+                        Exercise(name: "Plank",        inputType: .strength, muscleGroup: .core),
+                        Exercise(name: "Jumping Jacks", inputType: .cardio, muscleGroup: .cardio)
                     ]
                 ),
                 WorkoutTemplate(
@@ -83,13 +82,13 @@ struct FitHubApp: App {
                     isPreset: true,
                     userId: nil,
                     exercises: [
-                        Exercise(name: "Running",           inputType: .cardio,   category: .cardio),
-                        Exercise(name: "Burpees",           inputType: .strength, category: .fullBody),
-                        Exercise(name: "Mountain Climber",  inputType: .cardio,   category: .core)
+                        Exercise(name: "Running",          inputType: .cardio, muscleGroup: .cardio),
+                        Exercise(name: "Burpees",          inputType: .cardio, muscleGroup: .cardio),
+                        Exercise(name: "Mountain Climbers", inputType: .cardio, muscleGroup: .cardio)
                     ]
                 )
             ]
-
+            
             for var template in defaultWorkouts {
                 let ref = db.collection("workoutTemplates").document()
                 template.id = ref.documentID

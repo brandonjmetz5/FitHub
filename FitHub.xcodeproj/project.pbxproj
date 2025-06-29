@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A85625F72E0D970D001A7FAB /* BadgeTier.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85625F62E0D970D001A7FAB /* BadgeTier.swift */; };
+		A85625F92E0D972E001A7FAB /* BadgeDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85625F82E0D972E001A7FAB /* BadgeDefinitions.swift */; };
+		A85625FC2E0DA9E9001A7FAB /* BadgesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85625FB2E0DA9E9001A7FAB /* BadgesViewModel.swift */; };
+		A85625FE2E0DAA2F001A7FAB /* BadgesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85625FD2E0DAA2F001A7FAB /* BadgesView.swift */; };
+		A85626012E0DAD7F001A7FAB /* BadgeImageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85626002E0DAD7F001A7FAB /* BadgeImageProvider.swift */; };
+		A85626032E0DFE44001A7FAB /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85626022E0DFE44001A7FAB /* Badge.swift */; };
+		A85626052E0E114D001A7FAB /* ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85626042E0E114D001A7FAB /* ProgressView.swift */; };
+		A85626072E0E11D0001A7FAB /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A85626062E0E11D0001A7FAB /* StatsView.swift */; };
 		A88A46722E07AD7700EFC234 /* FitHubApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A46712E07AD7700EFC234 /* FitHubApp.swift */; };
 		A88A46742E07AD7700EFC234 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88A46732E07AD7700EFC234 /* ContentView.swift */; };
 		A88A46762E07AD7800EFC234 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A88A46752E07AD7800EFC234 /* Assets.xcassets */; };
@@ -54,6 +62,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A85625F62E0D970D001A7FAB /* BadgeTier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeTier.swift; sourceTree = "<group>"; };
+		A85625F82E0D972E001A7FAB /* BadgeDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeDefinitions.swift; sourceTree = "<group>"; };
+		A85625FB2E0DA9E9001A7FAB /* BadgesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesViewModel.swift; sourceTree = "<group>"; };
+		A85625FD2E0DAA2F001A7FAB /* BadgesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgesView.swift; sourceTree = "<group>"; };
+		A85626002E0DAD7F001A7FAB /* BadgeImageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BadgeImageProvider.swift; sourceTree = "<group>"; };
+		A85626022E0DFE44001A7FAB /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
+		A85626042E0E114D001A7FAB /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
+		A85626062E0E11D0001A7FAB /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		A88A466E2E07AD7700EFC234 /* FitHub.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitHub.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A88A46712E07AD7700EFC234 /* FitHubApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitHubApp.swift; sourceTree = "<group>"; };
 		A88A46732E07AD7700EFC234 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -112,9 +128,36 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A85625F52E0D96EF001A7FAB /* Badges */ = {
+			isa = PBXGroup;
+			children = (
+				A85625F62E0D970D001A7FAB /* BadgeTier.swift */,
+				A85625F82E0D972E001A7FAB /* BadgeDefinitions.swift */,
+				A85626022E0DFE44001A7FAB /* Badge.swift */,
+			);
+			path = Badges;
+			sourceTree = "<group>";
+		};
+		A85625FA2E0DA9CE001A7FAB /* BadgesViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A85625FB2E0DA9E9001A7FAB /* BadgesViewModel.swift */,
+			);
+			path = BadgesViewModels;
+			sourceTree = "<group>";
+		};
+		A85625FF2E0DAD64001A7FAB /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				A85626002E0DAD7F001A7FAB /* BadgeImageProvider.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
 		A88A46652E07AD7700EFC234 = {
 			isa = PBXGroup;
 			children = (
+				A85625FF2E0DAD64001A7FAB /* Utils */,
 				A88A46BC2E08DB4200EFC234 /* Themeing */,
 				A88A468E2E07ADCB00EFC234 /* ViewModels */,
 				A88A468D2E07ADC500EFC234 /* Models */,
@@ -165,6 +208,7 @@
 		A88A468D2E07ADC500EFC234 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A85625F52E0D96EF001A7FAB /* Badges */,
 				A88A46C12E09918F00EFC234 /* Workout */,
 				A88A46B72E08A94400EFC234 /* User */,
 				A88A46A12E07CE2900EFC234 /* FoodLog */,
@@ -175,6 +219,7 @@
 		A88A468E2E07ADCB00EFC234 /* ViewModels */ = {
 			isa = PBXGroup;
 			children = (
+				A85625FA2E0DA9CE001A7FAB /* BadgesViewModels */,
 				A88A46D72E099AB100EFC234 /* AuthViewModels */,
 				A88A46D62E099A9D00EFC234 /* FoodViewModels */,
 				A88A46C42E0991CD00EFC234 /* WorkoutViewModels */,
@@ -212,6 +257,8 @@
 				A88A470B2E0AF25E00EFC234 /* HomeView.swift */,
 				A88A470D2E0AF2A400EFC234 /* SubViews */,
 				A88A46F82E09D50600EFC234 /* WorkoutSubViews */,
+				A85626042E0E114D001A7FAB /* ProgressView.swift */,
+				A85626062E0E11D0001A7FAB /* StatsView.swift */,
 			);
 			path = Tabs;
 			sourceTree = "<group>";
@@ -290,6 +337,7 @@
 			isa = PBXGroup;
 			children = (
 				A88A470E2E0AF2C200EFC234 /* LogWeightView.swift */,
+				A85625FD2E0DAA2F001A7FAB /* BadgesView.swift */,
 			);
 			path = SubViews;
 			sourceTree = "<group>";
@@ -380,34 +428,42 @@
 				A88A46742E07AD7700EFC234 /* ContentView.swift in Sources */,
 				A88A46B92E08A95700EFC234 /* UserProfile.swift in Sources */,
 				A88A46F32E09D0BF00EFC234 /* ExerciseInputType.swift in Sources */,
+				A85625FC2E0DA9E9001A7FAB /* BadgesViewModel.swift in Sources */,
 				A88A470A2E0AF1FE00EFC234 /* WeightLogViewModel.swift in Sources */,
 				A88A470C2E0AF25E00EFC234 /* HomeView.swift in Sources */,
 				A88A46B42E08A8A400EFC234 /* ProfileSetupView.swift in Sources */,
 				A88A46FE2E09DCBC00EFC234 /* ExerciseLibrary.swift in Sources */,
 				A88A46A82E07D2EE00EFC234 /* FoodLogView.swift in Sources */,
 				A88A46F12E09CF8800EFC234 /* WorkoutLogViewModel.swift in Sources */,
+				A85626052E0E114D001A7FAB /* ProgressView.swift in Sources */,
 				A88A46E72E09C56700EFC234 /* WorkoutLogView.swift in Sources */,
 				A88A47002E09E8AE00EFC234 /* WorkoutPickerView.swift in Sources */,
 				A88A46A52E07D1AD00EFC234 /* FoodLogViewModel.swift in Sources */,
+				A85625F72E0D970D001A7FAB /* BadgeTier.swift in Sources */,
 				A88A46722E07AD7700EFC234 /* FitHubApp.swift in Sources */,
 				A88A46EB2E09CEC700EFC234 /* ExerciseEntry.swift in Sources */,
 				A88A46C02E08DB8400EFC234 /* FloatingActionButton.swift in Sources */,
 				A88A46932E07AE2D00EFC234 /* LoginView.swift in Sources */,
+				A85625F92E0D972E001A7FAB /* BadgeDefinitions.swift in Sources */,
 				A88A47022E09EB1200EFC234 /* ExerciseSelectionView.swift in Sources */,
 				A88A46EF2E09CF4000EFC234 /* WorkoutTemplatesViewModel.swift in Sources */,
+				A85626032E0DFE44001A7FAB /* Badge.swift in Sources */,
 				A88A46902E07AE0200EFC234 /* AuthViewModel.swift in Sources */,
 				A88A46AE2E07DEDA00EFC234 /* GlobalFoodSearchViewModel.swift in Sources */,
 				A88A46A32E07CE3C00EFC234 /* FoodEntry.swift in Sources */,
 				A88A47082E0AF1CE00EFC234 /* WeightLog.swift in Sources */,
 				A88A46F72E09D10B00EFC234 /* Exercise.swift in Sources */,
 				A88A46952E07AE4D00EFC234 /* MainTabView.swift in Sources */,
+				A85625FE2E0DAA2F001A7FAB /* BadgesView.swift in Sources */,
 				A88A46AC2E07DEB200EFC234 /* GlobalFood.swift in Sources */,
 				A88A46E92E09CE8700EFC234 /* WorkoutTemplate.swift in Sources */,
 				A88A46B62E08A8C700EFC234 /* ProfileView.swift in Sources */,
 				A88A470F2E0AF2C200EFC234 /* LogWeightView.swift in Sources */,
+				A85626072E0E11D0001A7FAB /* StatsView.swift in Sources */,
 				A88A46ED2E09CF1400EFC234 /* WorkoutLog.swift in Sources */,
 				A88A46BB2E08A9A700EFC234 /* ProfileViewModel.swift in Sources */,
 				A88A46FC2E09D85B00EFC234 /* MultiExerciseBuilderView.swift in Sources */,
+				A85626012E0DAD7F001A7FAB /* BadgeImageProvider.swift in Sources */,
 				A88A46F52E09D0DD00EFC234 /* WorkoutCategory.swift in Sources */,
 				A88A46AA2E07D38600EFC234 /* AddFoodView.swift in Sources */,
 				A88A46BE2E08DB6C00EFC234 /* Theme.swift in Sources */,
